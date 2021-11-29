@@ -2,6 +2,7 @@ package utils;
 
 import actor.ActorsAwards;
 import common.Constants;
+import database.SubscriptionType;
 import entertainment.Genre;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -122,5 +123,31 @@ public final class Utils {
         }
 
         return mapVideos;
+    }
+
+    /**
+     * Transforms a string into an enum
+     * @param subscription type of users
+     * @return an SubscriptionType Enum
+     */
+    public static SubscriptionType stringToSubscription(final String subscription) {
+        return switch (subscription) {
+            case "BASIC" -> SubscriptionType.BASIC;
+            case "PREMIUM" -> SubscriptionType.PREMIUM;
+            default -> null;
+        };
+    }
+
+    /**
+     * Transforms an array of strings into an array of enum
+     * @param genres of video
+     * @return an array of Genre Enums
+     */
+    public static ArrayList<Genre> stringsToGenres(final ArrayList<String> genres) {
+        ArrayList<Genre> res = new ArrayList<>();
+        for (var genre : genres) {
+            res.add(stringToGenre(genre));
+        }
+        return res;
     }
 }
