@@ -4,16 +4,27 @@ import actor.Actor;
 
 import java.util.ArrayList;
 
-public class Movie extends Video {
+public final class Movie extends Video {
 
-    public Movie(String title, int year, ArrayList<Genre> genres, ArrayList<Actor> cast, int duration) {
+    public Movie(final String title, final int year, final ArrayList<Genre> genres,
+                 final ArrayList<Actor> cast, final int duration) {
         super(title, year, genres, cast);
         this.setDuration(duration);
     }
 
-    //TODO implement rating system for movies
-    @Override
-    public void updateRating() {
+    public Movie(final String title) {
+        super(title);
+    }
 
+    @Override
+    public int addRating(final Double rating, final int season) {
+        int numOfRatings = super.getNumOfRatings();
+        Double average = numOfRatings * super.getRating();
+        average += rating;
+        numOfRatings++;
+        average /= numOfRatings;
+        super.setRating(average);
+        super.setNumOfRatings(numOfRatings);
+        return 1;
     }
 }

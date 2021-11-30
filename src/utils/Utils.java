@@ -8,6 +8,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
@@ -147,6 +148,19 @@ public final class Utils {
         ArrayList<Genre> res = new ArrayList<>();
         for (var genre : genres) {
             res.add(stringToGenre(genre));
+        }
+        return res;
+    }
+
+    /**
+     * Transforms an array of strings into an array of enum
+     * @param awards of actor
+     * @return an array of ActorsAwards Enums
+     */
+    public static ArrayList<ActorsAwards> stringsToAwards(final List<String> awards) {
+        ArrayList<ActorsAwards> res = new ArrayList<>();
+        for (var award : awards) {
+            res.add(stringToAwards(award));
         }
         return res;
     }

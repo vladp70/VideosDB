@@ -21,6 +21,7 @@ public final class Season {
      * List of ratings for each season
      */
     private List<Double> ratings;
+    private Double rating = 0.0;
 
     public Season(final int currentSeason, final int duration) {
         this.currentSeason = currentSeason;
@@ -40,8 +41,25 @@ public final class Season {
         return ratings;
     }
 
+    public Double getRating() {
+        return rating;
+    }
+
     public void setRatings(final List<Double> ratings) {
         this.ratings = ratings;
+    }
+
+    public void addRating(final Double newRating) {
+        int numOfRatings = this.ratings.size();
+        this.rating *= numOfRatings;
+        this.rating += newRating;
+        this.ratings.add(newRating);
+        numOfRatings++;
+        this.rating /= numOfRatings;
+    }
+
+    public int getCurrentSeason() {
+        return currentSeason;
     }
 
     @Override
