@@ -19,8 +19,6 @@ public final class User {
     private Map<Season, Double> serialRatings = new HashMap<>();
     private int numOfRatings = 0;
 
-    //TODO add class Rating and lists in User and Video
-
     public User(final String username, final String subscriptionType,
                 final Map<Video, Integer> history, final ArrayList<Video> favorites) {
         this.username = username;
@@ -60,7 +58,7 @@ public final class User {
 
     /**
      * Adds a favorite film for the user
-     * @param film
+     * @param film to be added to favorites
      * @return -1 if the film was not watched, 0 if the film is already in favorites,
      * 1 if it was successfully added
      */
@@ -77,20 +75,30 @@ public final class User {
 
     }
 
+    /**
+     * View film as the user
+     * @param film to watch
+     * @return -1 if the film is null or the new number of views
+     */
     public int watchFilm(final Video film) {
         int views = -1;
         if (film == null) {
             return views;
         }
         if (this.getHistory().containsKey(film)) {
-            views = this.getHistory().get(film) + 1;
+            views = history.get(film) + 1;
+
         } else {
             views = 1;
         }
-        this.getHistory().put(film, views);
+        history.put(film, views);
         return views;
     }
 
+    /**
+     * @return -1 if the film was not watched or the season cannot be found,
+     * 0 if the film is already rated, 1 if it was successfully rated
+     */
     public int addRatingSerial(final Video film, final Double grade, final int season) {
         Season ratedSeason = ((Serial) film).findSeason(season);
         if (ratedSeason == null) {
@@ -107,6 +115,10 @@ public final class User {
         }
     }
 
+    /**
+     * @return -1 if the film was not watched, 0 if the film is already rated,
+     * 1 if it was successfully rated
+     */
     public int addRatingMovie(final Video film, final Double grade) {
         if (movieRatings.containsKey(film)) {
             return 0;

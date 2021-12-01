@@ -6,12 +6,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class Actor {
     private String name;
     private String careerDescription;
     private ArrayList<Video> filmography;
     private Map<ActorsAwards, Integer> awards;
+    private int numAwards = 0;
     private Double average;
 
     public Actor(final String name, final String careerDescription,
@@ -21,6 +24,7 @@ public final class Actor {
         this.filmography = new ArrayList<>();
         this.awards = awards;
         this.average = 0.0;
+        this.calculateNumAwards();
     }
 
     public Actor(final String name) {
@@ -35,10 +39,6 @@ public final class Actor {
         return name;
     }
 
-    public String getCareerDescription() {
-        return careerDescription;
-    }
-
     public ArrayList<Video> getFilmography() {
         return filmography;
     }
@@ -49,6 +49,10 @@ public final class Actor {
 
     public Map<ActorsAwards, Integer> getAwards() {
         return awards;
+    }
+
+    public int getNumAwards() {
+        return numAwards;
     }
 
     public Double getAverage() {
@@ -79,8 +83,17 @@ public final class Actor {
         return awards.containsKey(award);
     }
 
+    public void calculateNumAwards() {
+        numAwards = 0;
+        for (Map.Entry<ActorsAwards, Integer> e : awards.entrySet()) {
+            numAwards += e.getValue();
+        }
+    }
+
     public boolean includesWordDescription(final String word) {
-        return careerDescription.toLowerCase(Locale.ROOT).contains(word.toLowerCase(Locale.ROOT));
+        Pattern pattern = Pattern.compile("\\b" + word.toLowerCase(Locale.ROOT) + "\\b");
+        Matcher matcher = pattern.matcher(careerDescription.toLowerCase(Locale.ROOT));
+        return matcher.find();
     }
 
     @Override

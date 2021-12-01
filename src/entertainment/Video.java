@@ -34,86 +34,89 @@ public abstract class Video implements Comparable<Video> {
         this.title = title;
         this.year = -1;
         this.genres = new ArrayList<>();
-        this.rating = -1.0;
+        this.rating = 0.0;
         this.cast = new ArrayList<>();
         this.duration = -1;
     }
 
-    public ArrayList<Actor> getCast() {
+    public final ArrayList<Actor> getCast() {
         return cast;
     }
 
-    public void setCast(final ArrayList<Actor> cast) {
+    public final void setCast(final ArrayList<Actor> cast) {
         this.cast = cast;
     }
 
-    public Double getRating() {
+    public final Double getRating() {
         return rating;
     }
 
-    public void setRating(final Double rating) {
+    public final void setRating(final Double rating) {
         this.rating = rating;
     }
 
-    public String getTitle() {
+    public final String getTitle() {
         return title;
     }
 
-    public int getYear() {
+    public final int getYear() {
         return year;
     }
 
-    public int getNumOfRatings() {
+    public final int getNumOfRatings() {
         return numOfRatings;
     }
 
-    public void setNumOfRatings(final int numOfRatings) {
+    public final void setNumOfRatings(final int numOfRatings) {
         this.numOfRatings = numOfRatings;
     }
 
-    public ArrayList<Genre> getGenres() {
+    public final ArrayList<Genre> getGenres() {
         return genres;
     }
 
-    public int getDuration() {
+    public final int getDuration() {
         return duration;
     }
 
-    public void setDuration(final int duration) {
+    public final void setDuration(final int duration) {
         this.duration = duration;
     }
 
-    public int getViews() {
+    public final int getViews() {
         return views;
     }
 
-    public void incrementViews() {
-        views++;
+    public final void incrementViews(final int value) {
+        views += value;
     }
 
-    public int getNumOfFavorites() {
+    public final int getNumOfFavorites() {
         return numOfFavorites;
     }
 
-    public void incrementNumOfFavorites() {
+    public final void incrementNumOfFavorites() {
         numOfFavorites++;
     }
 
-    @Override
-    public int compareTo(final Video o) {
-        if (this.getRating() > o.getRating()) {
-            return 1;
-        } else if (this.getRating() < o.getRating()) {
-            return -1;
-        } else {
-            return 0;
-        }
+    public final boolean isGenre(final Genre genre) {
+        return genres.contains(genre);
     }
 
     @Override
-    public String toString() {
+    public final int compareTo(final Video o) {
+        return this.rating.compareTo(o.rating);
+    }
+
+    @Override
+    public final String toString() {
         return this.title;
     }
 
+    /**
+     * @param newRating is the rating that needs to be added
+     * @param season is the rated season for shows and is ignored for movies
+     * @return 1 if the rating was added successfully and -1 if not
+     */
     public abstract int addRating(Double newRating, int season);
 }

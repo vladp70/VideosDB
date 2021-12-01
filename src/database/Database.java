@@ -48,11 +48,7 @@ public final class Database {
         return users;
     }
 
-    public Map<Genre, Integer> getGenrePopularity() {
-        return genrePopularity;
-    }
-
-    //Prerequisite: @calculateGenrePopularity
+    //Prerequisite: calculateGenrePopularity
     public Genre getMostPopularGenre() {
         Map.Entry<Genre, Integer> mostPopular = null;
         for (Map.Entry<Genre, Integer> g : genrePopularity.entrySet()) {
@@ -63,6 +59,10 @@ public final class Database {
         return mostPopular.getKey();
     }
 
+    /**
+     * @param film to find in database
+     * @return reference to the movie if found or a new hollow movie with the searched name
+     */
     public Video findVideo(final String film) {
         for (var existingMovie : this.getMovies()) {
             if (film.equals(existingMovie.getTitle())) {
@@ -78,6 +78,10 @@ public final class Database {
         return new Movie(film);
     }
 
+    /**
+     * @param actor to find in database
+     * @return reference to the actor if found or a new hollow actor with the searched name
+     */
     public Actor findActor(final String actor) {
         for (var existingActor : this.getActors()) {
             if (actor.equals(existingActor.getName())) {
@@ -88,13 +92,16 @@ public final class Database {
         return new Actor(actor);
     }
 
+    /**
+     * @param user to find in database
+     * @return reference to the user if found or null
+     */
     public User findUser(final String user) {
         for (var existingUser : this.getUsers()) {
             if (user.equals(existingUser.getUsername())) {
                 return existingUser;
             }
         }
-        //TODO (if need be) add new hollow user or verify if result is null
         return null;
     }
 
@@ -156,7 +163,7 @@ public final class Database {
         }
     }
 
-    //Prerequisite: @addActorsFromInputWithoutFilmography called
+    //Prerequisite: addActorsFromInputWithoutFilmography and videos added
     private void initActorsFilmographyFromInput(final List<ActorInputData> actorData) {
         ArrayList<Video> filmography;
         Actor actor;
@@ -168,11 +175,11 @@ public final class Database {
         }
     }
 
-    //Prerequisite: @addUsersFromInput @addVideosFromInput
+    //Prerequisite: addUsersFromInput addVideosFromInput
     private void initVideoViewsAndFavorites() {
         for (var u : users) {
             for (Map.Entry<Video, Integer> m : u.getHistory().entrySet()) {
-                m.getKey().incrementViews();
+                m.getKey().incrementViews(m.getValue().intValue());
             }
             for (var m : u.getFavorites()) {
                 m.incrementNumOfFavorites();
@@ -202,13 +209,19 @@ public final class Database {
         }
     }
 
-    //To be used only when needee
+    //To be used only when needed
     private void updateActorsRatings() {
         for (var a : actors) {
             a.updateRating();
         }
     }
 
+    /**
+     * Init the database with all the necessary steps that need to be taken only once.
+     * Because each list of data in the database references another, one had to be
+     * initialized in two steps, so the actors are created without filmography first.
+     * @param input stores all the information parsed from the json input files
+     */
     public void initDatabaseContent(final Input input) {
         addActorsFromInputWithoutFilmography(input.getActors());
         addMoviesFromInput(input.getMovies());
@@ -218,6 +231,11 @@ public final class Database {
         initVideoViewsAndFavorites();
     }
 
+    /**
+     * For all commands:
+     * Updates both the user and the film accordingly
+     * @see User return values for associated methods
+     */
     public int commandFavorite(final String username, final String title) {
         Video film = findVideo(title);
         User user = findUser(username);
@@ -232,8 +250,8 @@ public final class Database {
         Video film = findVideo(title);
         User user = findUser(username);
         int returnCode = user.watchFilm(film);
-        if (returnCode == 1) {
-            film.incrementViews();
+        if (returnCode > 0) {
+            film.incrementViews(returnCode);
         }
         return returnCode;
     }
@@ -262,6 +280,12 @@ public final class Database {
 
     }
 
+    /**
+     * For all recommendations:
+     * Applies the specified criteria and sorting methods to find the right video(s)
+     * @param username of the user that requested a recommendation
+     * @return the recommended video(s) or null if the algorithm didn't succeed
+     */
     public Video recommendStandard(final String username) {
         User user = findUser(username);
         if (user == null) {
@@ -289,7 +313,7 @@ public final class Database {
 
         Video bestUnseen = null;
         ArrayList<Movie> sortedMovies = new ArrayList<>(movies);
-        Collections.sort(sortedMovies);
+        Collections.sort(sortedMovies, Collections.reverseOrder(Video::compareTo));
         for (var movie : sortedMovies) {
             if (!(user.hasWatched(movie))) {
                 bestUnseen = movie;
@@ -297,7 +321,7 @@ public final class Database {
             }
         }
         ArrayList<Serial> sortedSerials = new ArrayList<>(serials);
-        Collections.sort(sortedSerials);
+        Collections.sort(sortedSerials, Collections.reverseOrder(Video::compareTo));
         for (var show : sortedSerials) {
             if (!(user.hasWatched(show))) {
                 if (show.compareTo(bestUnseen) > 0) {
@@ -347,29 +371,29 @@ public final class Database {
         }
 
         Video mostFavorited = null;
-        ArrayList<Movie> sortedMovies = new ArrayList<>(movies);
-        Collections.sort(sortedMovies, new Comparator<Movie>() {
+        Comparator<Video> comp = new Comparator<Video>() {
             @Override
-            public int compare(final Movie o1, final Movie o2) {
+            public int compare(final Video o1, final Video o2) {
                 return o1.getNumOfFavorites() - o2.getNumOfFavorites();
             }
-        });
+        };
+        ArrayList<Movie> sortedMovies = new ArrayList<>(movies);
+        Collections.sort(sortedMovies, Collections.reverseOrder(comp));
         for (var movie : sortedMovies) {
             if (!(user.hasWatched(movie))) {
-                mostFavorited = movie;
+                if (movie.getNumOfFavorites() > 0) {
+                    mostFavorited = movie;
+                }
                 break;
             }
         }
         ArrayList<Serial> sortedSerials = new ArrayList<>(serials);
-        Collections.sort(sortedSerials, new Comparator<Serial>() {
-            @Override
-            public int compare(final Serial o1, final Serial o2) {
-                return o1.getNumOfFavorites() - o2.getNumOfFavorites();
-            }
-        });
+        Collections.sort(sortedSerials, Collections.reverseOrder(comp));
         for (var show : sortedSerials) {
             if (!(user.hasWatched(show))) {
-                if (show.getNumOfFavorites() > mostFavorited.getNumOfFavorites()) {
+                if ((mostFavorited == null
+                        || (show.getNumOfFavorites() > mostFavorited.getNumOfFavorites()))
+                        && (show.getNumOfFavorites() > 0)) {
                     mostFavorited = show;
                 }
                 break;
@@ -406,7 +430,7 @@ public final class Database {
                 if (o1.getRating().equals(o2.getRating())) {
                     return o1.getTitle().compareTo(o2.getTitle());
                 } else {
-                    return o2.compareTo(o1);
+                    return o1.compareTo(o2);
                 }
             }
         });
@@ -458,8 +482,8 @@ public final class Database {
 
         var comp = new Comparator<Actor>() {
             public int compare(final Actor o1, final Actor o2) {
-                if (o1.getAwards().size() != o2.getAwards().size()) {
-                    return o1.getAwards().size() - o2.getAwards().size();
+                if (o1.getNumAwards() != o2.getNumAwards()) {
+                    return o1.getNumAwards() - o2.getNumAwards();
                 } else {
                     return o1.getName().compareTo(o2.getName());
                 }
@@ -505,6 +529,158 @@ public final class Database {
         }
 
         return res;
+    }
+
+    /**
+     * For all movie queries (and similarly to actor and user queries):
+     * Filters and sorts the database accordingly
+     * @param isMovie is 1 if the video is a movie and 0 if it is a serial
+     * @param filterYear to be applied on the films if not 0
+     * @param filterGenre to be applied on the films if not null
+     * @param limit of films to be returned
+     * @param asc is true if the order is ascendant and false if not
+     * @return list of recommendations
+     */
+    public List<Video> queryMoviesRating(final boolean isMovie, final int filterYear,
+                                         final Genre filterGenre, final int limit,
+                                         final boolean asc) {
+        ArrayList<Video> res = null;
+        if (isMovie) {
+            res = new ArrayList<>(movies);
+        } else {
+            res = new ArrayList<>(serials);
+        }
+        res.removeIf(video -> !(video.getNumOfRatings() > 0
+                                && (filterYear == 0 || video.getYear() == filterYear)
+                                && (filterGenre == null || video.isGenre(filterGenre))));
+        Comparator<Video> comp = new Comparator<Video>() {
+            @Override
+            public int compare(final Video o1, final Video o2) {
+                if (!(o1.getRating().equals(o2.getRating()))) {
+                    return o1.getRating().compareTo(o2.getRating());
+                } else {
+                    return o1.getTitle().compareTo(o2.getTitle());
+                }
+            }
+        };
+
+        if (asc) {
+            Collections.sort(res, comp);
+        } else {
+            Collections.sort(res, Collections.reverseOrder(comp));
+        }
+        if (limit <= res.size()) {
+            return new ArrayList<>(res.subList(0, limit));
+        } else {
+            return res;
+        }
+    }
+
+    public List<Video> queryMoviesFavorite(final boolean isMovie, final int filterYear,
+                                         final Genre filterGenre, final int limit,
+                                         final boolean asc) {
+        ArrayList<Video> res = null;
+        if (isMovie) {
+            res = new ArrayList<>(movies);
+        } else {
+            res = new ArrayList<>(serials);
+        }
+
+        res.removeIf(video -> !(video.getNumOfFavorites() > 0
+                        && (filterYear == 0 || video.getYear() == filterYear)
+                        && (filterGenre == null || video.isGenre(filterGenre))));
+        Comparator<Video> comp = new Comparator<Video>() {
+            @Override
+            public int compare(final Video o1, final Video o2) {
+                if (o1.getNumOfFavorites() != o2.getNumOfFavorites()) {
+                    return o1.getNumOfFavorites() - o2.getNumOfFavorites();
+                } else {
+                    return o1.getTitle().compareTo(o2.getTitle());
+                }
+            }
+        };
+
+        if (asc) {
+            Collections.sort(res, comp);
+        } else {
+            Collections.sort(res, Collections.reverseOrder(comp));
+        }
+        if (limit <= res.size()) {
+            return new ArrayList<>(res.subList(0, limit));
+        } else {
+            return res;
+        }
+    }
+
+    public List<Video> queryMoviesLongest(final boolean isMovie, final int filterYear,
+                                           final Genre filterGenre, final int limit,
+                                           final boolean asc) {
+        ArrayList<Video> res = null;
+        if (isMovie) {
+            res = new ArrayList<>(movies);
+        } else {
+            res = new ArrayList<>(serials);
+        }
+
+        res.removeIf(video -> !((filterYear == 0 || video.getYear() == filterYear)
+                                && (filterGenre == null || video.isGenre(filterGenre))));
+        Comparator<Video> comp = new Comparator<Video>() {
+            @Override
+            public int compare(final Video o1, final Video o2) {
+                if (o1.getDuration() != o2.getDuration()) {
+                    return o1.getDuration() - o2.getDuration();
+                } else {
+                    return o1.getTitle().compareTo(o2.getTitle());
+                }
+            }
+        };
+
+        if (asc) {
+            Collections.sort(res, comp);
+        } else {
+            Collections.sort(res, Collections.reverseOrder(comp));
+        }
+        if (limit <= res.size()) {
+            return new ArrayList<>(res.subList(0, limit));
+        } else {
+            return res;
+        }
+    }
+
+    public List<Video> queryMoviesMostViewed(final boolean isMovie, final int filterYear,
+                                          final Genre filterGenre, final int limit,
+                                          final boolean asc) {
+        ArrayList<Video> res = null;
+        if (isMovie) {
+            res = new ArrayList<>(movies);
+        } else {
+            res = new ArrayList<>(serials);
+        }
+
+        res.removeIf(video -> !(video.getViews() > 0
+                && (filterYear == 0 || video.getYear() == filterYear)
+                && (filterGenre == null || video.isGenre(filterGenre))));
+        Comparator<Video> comp = new Comparator<Video>() {
+            @Override
+            public int compare(final Video o1, final Video o2) {
+                if (o1.getViews() != o2.getViews()) {
+                    return o1.getViews() - o2.getViews();
+                } else {
+                    return o1.getTitle().compareTo(o2.getTitle());
+                }
+            }
+        };
+
+        if (asc) {
+            Collections.sort(res, comp);
+        } else {
+            Collections.sort(res, Collections.reverseOrder(comp));
+        }
+        if (limit <= res.size()) {
+            return new ArrayList<>(res.subList(0, limit));
+        } else {
+            return res;
+        }
     }
 
     public List<User> queryUsersActive(final String criteria, final int limit,

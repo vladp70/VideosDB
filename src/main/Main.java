@@ -7,6 +7,7 @@ import checker.Checker;
 import common.Constants;
 import database.Database;
 import database.User;
+import entertainment.Genre;
 import entertainment.Video;
 import fileio.ActionInputData;
 import fileio.Input;
@@ -79,7 +80,6 @@ public final class Main {
         Writer fileWriter = new Writer(filePath2);
         JSONArray arrayResult = new JSONArray();
 
-        //TODO add here the entry point to your implementation
         Database database = new Database();
         database.initDatabaseContent(input);
         for (ActionInputData action : input.getCommands()) {
@@ -169,23 +169,54 @@ public final class Main {
                         result = database.queryActorsAverage(action.getNumber(), asc);
                     } else if (action.getCriteria().equals(Constants.AWARDS)) {
                         ArrayList<ActorsAwards> filter =
-                                Utils.stringsToAwards(action.getFilters().get(3));
+                                Utils.stringsToAwards(action.getFilters().get(Constants.AWARD_ID));
                         result = database.queryActorsAwards(filter, action.getNumber(), asc);
                     } else if (action.getCriteria().equals(Constants.FILTER_DESCRIPTIONS)) {
                         result = database.queryActorsDescription(action.getFilters().get(2), asc);
                     }
 
                     str.append(result);
-                } else if (action.getObjectType().equals(Constants.MOVIES)) {
+                } else if (action.getObjectType().equals(Constants.MOVIES)
+                        || action.getObjectType().equals(Constants.SHOWS)) {
+                    List<Video> result = null;
+                    boolean isMovie = action.getObjectType().equals(Constants.MOVIES);
+                    Integer filterYear = 0;
+                    Genre filterGenre = null;
+                    if (action.getFilters().get(0).get(0) != null) {
+                        filterYear = Integer.valueOf(action.getFilters().get(0).get(0));
+                    }
+                    if (action.getFilters().get(1).get(0) != null) {
+                        filterGenre = Utils.stringToGenre(action.getFilters().get(1).get(0));
+                        if (filterGenre == null) {
+                            result = new ArrayList<>();
+                            str.append(result);
+                            arrayResult.add(fileWriter.writeFile(action.getActionId(),
+                                    "", str.toString()));
+                            continue;
+                        }
+                    }
 
+                    if (action.getCriteria().equals(Constants.RATINGS)) {
+                        result = database.queryMoviesRating(isMovie, filterYear, filterGenre,
+                                action.getNumber(), asc);
+                    } else if (action.getCriteria().equals(Constants.FAVOURITE_MOVIES)) {
+                        result = database.queryMoviesFavorite(isMovie, filterYear, filterGenre,
+                                action.getNumber(), asc);
+                    } else if (action.getCriteria().equals(Constants.LONGEST)) {
+                        result = database.queryMoviesLongest(isMovie, filterYear, filterGenre,
+                                action.getNumber(), asc);
+                    } else if (action.getCriteria().equals(Constants.MOST_VIEWED)) {
+                        result = database.queryMoviesMostViewed(isMovie, filterYear, filterGenre,
+                                action.getNumber(), asc);
+                    }
+
+                    str.append(result);
                 } else if (action.getObjectType().equals(Constants.USERS)) {
                     List<User> result = database.queryUsersActive(action.getCriteria(),
                             action.getNumber(), asc);
-
                     str.append(result);
                 }
             }
-
             arrayResult.add(fileWriter.writeFile(action.getActionId(), "", str.toString()));
         }
 
