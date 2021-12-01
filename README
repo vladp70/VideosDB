@@ -1,38 +1,33 @@
-Object Oriented Programming Course
-Homework - VideosDB
+OOP - VideosDB
+Vlad Petrovici - 321CD
+---------------------------------------------------------------------------------
 
-November 2021
 
-# Info
-https://ocw.cs.pub.ro/courses/poo-ca-cd/teme/tema
+The input data is parsed from json data and it is used to build the database of
+users, actors, movies and tv shows. When initializing the actual data in the
+database, as the entities reference other entities, there cannot be a sequential
+independent process for them. The solution implemented was to create the actor
+list without initially attributing the correct references to their filmography
+because the films are not yet created. Ultimately, the filmography is stored
+accordingly in the last part of the initialization process.
 
-# About the code
+The database contains references to the objects so there is a smoother and more
+direct transition between working with different entities, thus avoiding always
+returning to the database to make the connection. It can find entities based on
+their names and it can apply different actions on its lists. The ratings are
+stored as an average value or a list of reviews and a number of reviews. In this
+way, the overall rating can be easily calculated and updated given a new review
+(e.g. through the overall sum of the grades and their number). The views and
+number of favorite lists the films appear on are stored internally in the video
+class for simplicity.
 
-We provide the input tests, the logic that parses them and the checker that runs them.
+The recommendations, commands and queries are read from the parsed json
+information, the requests being passed to the database to handle through its
+methods. As the actions require interaction between different entities, the
+database should be the class that operates with them and updates all the
+involved parties with the new data. For the video queries, the implementations
+were combined in one by passing as a parameter if the object worked on is a
+movie or a serial. For queries, the data is filtered and then sorted as a new
+list to preserve the initial order of the database.
 
-* test_db - contains the tests in JSON format
-* src
-   * checker - the checker's sources including the checkstyle necessary files, not to be modified
-   * fileio - classes for parsing the input files, not to be modified
-   * common, utils
-        * contain utility classes with constants and static methods
-        * you can add your own functionality in the existing classes or add new classes as well
-   * actor
-        * contains an enum for the types of awards an actor can have - do not modify it
-        * you can add here your actor related classes
-   * entertainment
-        * contains an enum for the supported video genres - do not modify it
-        * class for representing a Season of a tv show - do not modify it
-        * you can add here your entertainment related classes
-
-We encourage you to organize your implementation in packages based on the functionality their classes offer. Try to keep
-your code modular, readable and documented.
-
-# Testing
-
-The Main class runs the checker on your implementation. Add the entry point to your implementation in it.
-
-Run Main to test your implementation from the IDE or from command line.
-
-Run the main method from Test class with the name of the input file from the command line and the result will be written
-to the out.txt file. Thus, you can compare this result with ref.
+The result is written in the output file.
